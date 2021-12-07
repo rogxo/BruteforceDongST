@@ -1,5 +1,6 @@
 import json
 import threading
+import time
 
 import requests
 
@@ -36,7 +37,11 @@ def login(session, username, password):
     session.headers = headers
     para = {"school": 10026, "account": username, "password": password}
     data = 'para=' + str(para)
-    res = session.post(url=url, headers=headers, data=data)
+    try:
+        res = session.post(url=url, headers=headers, data=data)
+    except:
+        time.sleep(0.1)
+        res = session.post(url=url, headers=headers, data=data)
     print(res.text)
     # if json.loads(res.text)['msg'] == "账号或密码错误":
     if json.loads(res.text)['msg'] == "SUCCESS":
@@ -109,7 +114,7 @@ def joinAllActivity(session):
             joinActivity(session, obj['id'])
 
 
-def SignInViaCode(session, code):
+def SignInViaCode(session, username, password, code):
     url = 'http://aust.cliv2.dongst.cn/apps/activity/getactinfobycode?para=%7B%22code%22%3A%22' + str(code) + '%22%7D'
     res = session.get(url=url)
     print(code, end='\t')
@@ -118,7 +123,7 @@ def SignInViaCode(session, code):
     if msg != "无效数字码":
         if msg == "读取用户身份失败":
             login(session, username, password)
-            SignInViaCode(session, code)
+            SignInViaCode(session, username, password, code)
         else:
             with open('code.txt', mode='a+') as f:
                 f.write(code + '\n')
@@ -158,7 +163,7 @@ def brutesigncode():
             if flag is True:
                 return
             code = str(code).rjust(4, '0')
-            t = threading.Thread(target=SignInViaCode, args=(s, code))
+            t = threading.Thread(target=SignInViaCode, args=(s, username, password, code))
             t.start()
 
         # time.sleep(0.000001)
